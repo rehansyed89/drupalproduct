@@ -1,0 +1,7 @@
+services:
+  logger.channel.products_main:
+    parent: logger.channel_base
+    arguments: ['products_main']
+  products.helper:
+    class: Drupal\products_main\Service\ProductsHelperService
+    arguments: ['@entity_type.manager', '@messenger']

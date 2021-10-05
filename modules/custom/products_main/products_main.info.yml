@@ -1,0 +1,5 @@
+name: 'Products main'
+type: module
+description: 'This module handles all the CRUD operations of the products'
+core: 8.x
+package: 'Custom'

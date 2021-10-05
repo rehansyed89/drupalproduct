@@ -1,0 +1,8 @@
+
+products_main.products_controller_list:
+  path: '/product/list'
+  defaults:
+    _controller: '\Drupal\products_main\Controller\ProductsController::list'
+    _title: 'Products list'
+  requirements:
+    _permission: 'access content'
