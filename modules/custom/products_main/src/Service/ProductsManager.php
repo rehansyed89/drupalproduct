@@ -9,9 +9,9 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\node\Entity\Node;
 
 /**
- * Class ProductsHelperService.
+ * Class ProductsManager.
  */
-class ProductsHelperService {
+class ProductsManager {
 
   /**
    * The entity type manager.
@@ -50,7 +50,7 @@ class ProductsHelperService {
       $nodes = Node::loadMultiple($node_ids);
 
       foreach ($nodes as $node) {
-        $page[] = $this->entityTypeManager->getViewBuilder('node')->view($node, 'products_view_mode');
+        $page[] = $this->entityTypeManager->getViewBuilder('node')->view($node, 'product_view_mode');
       }
     } catch (\Exception $exception) {
       $this->messenger->addError(t($exception->getMessage()));
