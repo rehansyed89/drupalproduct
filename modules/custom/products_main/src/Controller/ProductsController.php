@@ -3,11 +3,12 @@
 namespace Drupal\products_main\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\node\Entity\Node;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\products_main\Service\ProductsHelperService;
+use Drupal\products_main\Service\ProductsManager;
 
 /**
  * Class ProductsController.
@@ -15,27 +16,35 @@ use Drupal\products_main\Service\ProductsHelperService;
 class ProductsController extends ControllerBase {
 
   /**
+   * The entity type manager.
+   *
+   * @var EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * The productsHelperService.
    *
-   * @var ProductsHelperService
+   * @var ProductsManager
    */
   private $productsHelperService;
 
   /**
    * The pager manager.
    *
-   * @var \Drupal\Core\Pager\PagerManagerInterface
+   * @var PagerManagerInterface
    */
   protected $pagerManager;
 
   /**
    * Constructs a ProductsController object.
    *
-   * @param ProductsHelperService $productsHelperService
+   * @param ProductsManager $productsHelperService
    *   A productsHelperService object
    */
 
-  public function __construct(ProductsHelperService $productsHelperService, PagerManagerInterface $pagerManager){
+  public function __construct(EntityTypeManagerInterface $entityTypeManager,ProductsManager $productsHelperService, PagerManagerInterface $pagerManager){
+    $this->entityTypeManager = $entityTypeManager;
     $this->productsHelperService = $productsHelperService;
     $this->pagerManager = $pagerManager;
   }
@@ -46,6 +55,7 @@ class ProductsController extends ControllerBase {
   public static function create(ContainerInterface $container): ProductsController
   {
     return new static(
+      $container->get("entity_type.manager"),
       $container->get("products.helper"),
       $container->get('pager.manager')
     );
@@ -57,30 +67,22 @@ class ProductsController extends ControllerBase {
    *   Return List of products.
    */
   public function list(): array{
-    $products_lists = $this->productsHelperService->fetchProductsList();
-    $build['content'] = $this->pagination($products_lists, 15);
+    $products_lists = [];
+    $itemsPerPage = 15;
+    $nodes = $this->productsHelperService->fetchProductsList();
+    foreach ($nodes as $node) {
+      $products_lists[] = $this->entityTypeManager->getViewBuilder('node')->view($node, 'product_view_mode');
+    }
+    $totalProducts = count($products_lists);
+    $currentPage = $this->pagerManager->createPager($totalProducts, $itemsPerPage)->getCurrentPage();
+    $chunks = array_chunk($products_lists, $itemsPerPage);
+
+    $build['content'] = $chunks[$currentPage];
     $build['pager'] = [
       '#type' => 'pager',
     ];
     return $build;
   }
-
-  /*
-   * The pagination.
-   *
-   * @param $items
-   *    List of the products.
-   *
-   * @param $itemsPerPage
-   *    Total items per page.
-   */
-  public function pagination($items, $itemsPerPage) {
-    $total = count($items);
-    $currentPage = $this->pagerManager->createPager($total, $itemsPerPage)->getCurrentPage();
-    $chunks = array_chunk($items, $itemsPerPage);
-    return $chunks[$currentPage];
-  }
-
 }
 
 

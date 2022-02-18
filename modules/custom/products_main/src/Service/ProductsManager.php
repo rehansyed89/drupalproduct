@@ -7,11 +7,12 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\node\Entity\Node;
+use Drupal\node\NodeInterface;
 
 /**
- * Class ProductsHelperService.
+ * Class ProductsManager.
  */
-class ProductsHelperService {
+class ProductsManager {
 
   /**
    * The entity type manager.
@@ -38,25 +39,16 @@ class ProductsHelperService {
   }
 
   /**
-   * fetches the product List
-   *
-   * @return array
+   * @return NodeInterface[]
    */
   public function fetchProductsList(): array{
-    $page = [];
+    $nodes = [];
     try {
-      $query = $this->entityTypeManager->getStorage('node')->getQuery();
-      $node_ids = $query->condition('type', 'product')->execute();
-      $nodes = Node::loadMultiple($node_ids);
-
-      foreach ($nodes as $node) {
-        $page[] = $this->entityTypeManager->getViewBuilder('node')->view($node, 'products_view_mode');
-      }
+      $nodes = $this->entityTypeManager->getStorage('node')->loadByProperties(['type' => 'product', 'status' => 1 ]);
     } catch (\Exception $exception) {
       $this->messenger->addError(t($exception->getMessage()));
     }
-
-    return $page;
+    return $nodes;
   }
 
 }
